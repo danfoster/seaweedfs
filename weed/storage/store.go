@@ -142,16 +142,19 @@ func (s *Store) FindFreeLocation(diskType DiskType) (ret *DiskLocation) {
 	max := int32(0)
 	for _, location := range s.Locations {
 		if diskType != location.DiskType {
+			glog.V(4).Infof("Skipping %s: wrong disk type %s != %s", location.Directory, location.DiskType, diskType)
 			continue
 		}
 		if location.isDiskSpaceLow {
+			glog.V(4).Infof("Skipping %s: disk space is low", location.Directory)
 			continue
 		}
 		currentFreeCount := location.MaxVolumeCount - int32(location.VolumesLen())
-		currentFreeCount *= erasure_coding.DataShardsCount
-		currentFreeCount -= int32(location.EcShardCount())
-		currentFreeCount /= erasure_coding.DataShardsCount
+		glog.V(4).Infof(
+			"Considering %s: currentFreeCount=%d maxVolumeCount=%d numVolumes=%d dataShardsCount=%d ecSharedCount=%d",
+			location.Directory, currentFreeCount, location.MaxVolumeCount, int32(location.VolumesLen()), erasure_coding.DataShardsCount, int32(location.EcShardCount()))
 		if currentFreeCount > max {
+			glog.V(4).Infof("Picked %s: currentFreeCount=%d", location.Directory, currentFreeCount)
 			max = currentFreeCount
 			ret = location
 		}
