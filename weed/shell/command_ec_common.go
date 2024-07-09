@@ -3,6 +3,8 @@ package shell
 import (
 	"context"
 	"fmt"
+	"math"
+
 	"github.com/seaweedfs/seaweedfs/weed/glog"
 	"github.com/seaweedfs/seaweedfs/weed/operation"
 	"github.com/seaweedfs/seaweedfs/weed/pb"
@@ -13,7 +15,6 @@ import (
 	"github.com/seaweedfs/seaweedfs/weed/storage/types"
 	"golang.org/x/exp/slices"
 	"google.golang.org/grpc"
-	"math"
 )
 
 func moveMountedShardToEcNode(commandEnv *CommandEnv, existingLocation *EcNode, collection string, vid needle.VolumeId, shardId erasure_coding.ShardId, destinationEcNode *EcNode, applyBalancing bool) (err error) {
@@ -175,7 +176,7 @@ func countFreeShardSlots(dn *master_pb.DataNodeInfo, diskType types.DiskType) (c
 	if diskInfo == nil {
 		return 0
 	}
-	return int(diskInfo.MaxVolumeCount-diskInfo.VolumeCount)*erasure_coding.DataShardsCount - countShards(diskInfo.EcShardInfos)
+	return int(diskInfo.MaxVolumeCount-diskInfo.VolumeCount) * erasure_coding.DataShardsCount
 }
 
 type RackId string
