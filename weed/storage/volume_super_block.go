@@ -10,14 +10,14 @@ import (
 	"github.com/seaweedfs/seaweedfs/weed/storage/super_block"
 )
 
-func (v *Volume) maybeWriteSuperBlock() error {
+func (v *Volume) maybeWriteSuperBlock(volumeCreated bool) error {
 
 	datSize, _, e := v.DataBackend.GetStat()
 	if e != nil {
 		glog.V(0).Infof("failed to stat datafile %s: %v", v.DataBackend.Name(), e)
 		return e
 	}
-	if datSize == 0 {
+	if volumeCreated || datSize == 0 {
 		v.SuperBlock.Version = needle.CurrentVersion
 		_, e = v.DataBackend.WriteAt(v.SuperBlock.Bytes(), 0)
 		if e != nil && os.IsPermission(e) {

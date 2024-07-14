@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"github.com/seaweedfs/seaweedfs/weed/storage/super_block"
 	"io"
 	"os"
 
@@ -150,13 +149,6 @@ func verifyDeletedNeedleIntegrity(datFile backend.BackendStorageFile, v needle.V
 }
 
 func (v *Volume) checkIdxFile() error {
-	datFileSize, _, err := v.DataBackend.GetStat()
-	if err != nil {
-		return fmt.Errorf("get stat %s: %v", v.FileName(".dat"), err)
-	}
-	if datFileSize <= super_block.SuperBlockSize {
-		return nil
-	}
 	indexFileName := v.FileName(".idx")
 	if util.FileExists(indexFileName) {
 		return nil

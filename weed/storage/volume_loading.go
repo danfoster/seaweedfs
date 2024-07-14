@@ -28,6 +28,7 @@ func (v *Volume) load(alsoLoadIndex bool, createDatIfMissing bool, needleMapKind
 	alreadyHasSuperBlock := false
 
 	hasLoadedVolume := false
+	volumeCreated := false
 	defer func() {
 		if !hasLoadedVolume {
 			if v.nm != nil {
@@ -70,6 +71,7 @@ func (v *Volume) load(alsoLoadIndex bool, createDatIfMissing bool, needleMapKind
 	} else {
 		if createDatIfMissing {
 			v.DataBackend, err = backend.CreateVolumeFile(v.FileName(".dat"), preallocate, v.MemoryMapMaxSizeMb)
+			volumeCreated = true
 		} else {
 			return fmt.Errorf("volume data file %s does not exist", v.FileName(".dat"))
 		}
@@ -98,7 +100,7 @@ func (v *Volume) load(alsoLoadIndex bool, createDatIfMissing bool, needleMapKind
 		if !v.SuperBlock.Initialized() {
 			return fmt.Errorf("volume %s not initialized", v.FileName(".dat"))
 		}
-		err = v.maybeWriteSuperBlock()
+		err = v.maybeWriteSuperBlock(volumeCreated)
 	}
 	if err == nil && alsoLoadIndex {
 		// adjust for existing volumes with .idx together with .dat files
@@ -107,9 +109,12 @@ func (v *Volume) load(alsoLoadIndex bool, createDatIfMissing bool, needleMapKind
 				v.dirIdx = v.dir
 			}
 		}
-		// check volume idx files
-		if err := v.checkIdxFile(); err != nil {
-			glog.Fatalf("check volume idx file %s: %v", v.FileName(".idx"), err)
+		// Don't check for index file if we've just created an dataVolume, as it won't exist yet.
+		if !volumeCreated {
+			// check volume idx files
+			if err := v.checkIdxFile(); err != nil {
+				glog.Fatalf("check volume idx file %s: %v", v.FileName(".idx"), err)
+			}
 		}
 		var indexFile *os.File
 		if v.noWriteOrDelete {
